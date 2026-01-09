@@ -51,3 +51,15 @@ class ParentChunk:
             pass
         except Exception as e:
             logger.error(f"Error in child chunk:{e}")
+
+
+class ChildChunking:
+    def __init__(self):
+        pass
+
+    def extracting_entity(self, json_payload:dict):
+        try:
+            pass
+        
+        except Exception as e:
+            logger.error(f"Error in extracting data from the json payload")
