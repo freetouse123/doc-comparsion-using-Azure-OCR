@@ -7,10 +7,14 @@ from openai import AzureOpenAI
 from dotenv import load_dotenv
 from config.config import DefaultConfig
 from utils.helper import time_decorator
+from utils.utils import extract_json_from_llm_response
 from datetime import datetime
 
+from typing import Dict
+import json
 import os
 import fitz
+
 load_dotenv()
 
 class DataExtraction:
@@ -83,9 +87,14 @@ class DataExtraction:
     
     
     @time_decorator
-    def data_pre_processing(self, extracted_data:str):
+    def data_pre_processing(self, extracted_data: str) -> Dict:
+        """
+        Pre-process the extracted text using Azure OpenAI LLM and return structured JSON output.
+        Validates that the response is a proper JSON object.
+        """
         try:
-            self.config.logger.info("Pre Processing the Extracted text using the m")
+            self.config.logger.info("Pre-processing the extracted text using the LLM...")
+
             response = self.openai_client.chat.completions.create(
                 messages=[
                     {
@@ -108,7 +117,7 @@ class DataExtraction:
             self.config.logger.success(f"Complete data processing using the OpenAI")
             return response.choices[0].message.content
         except Exception as e:
-            self.config.logger.error(f"Error in Data pre processing from Openai side: {e}")
+            self.config.logger.error(f"Error in data pre-processing from OpenAI side: {e}")
             raise
 
     
@@ -126,8 +135,19 @@ class DataExtraction:
                 )
 
                 final_text = "\n\n".join(page_wise_ocr)
+
+                ## Handling the json response
+                import json
+                try:
+                    data = json.loads(response)
+                except json.JSONDecodeError as e:
+                    self.config.logger.error(f"Invalid JSON syntax: {e}")
+                    data = extract_json_from_llm_response(response)
+
+                # print(data)
                 self.config.logger.success(f"Successfull completed the Extraction pipeline with Azure OCR.........")
-                return final_text, response
+                return final_text, data, page_wise_md
+            
 
             else:
                 self.config.logger.info("Data Extraction Pipeline started witout Azure OCR.......... ")
@@ -138,8 +158,18 @@ class DataExtraction:
                 response= self.data_pre_processing(
                     extracted_data='\n\n'.join(page_wise_ocr[:3])
                 )
+
+                ## Handling the json response
+                import json
+                try:
+                    data = json.loads(response)
+                except json.JSONDecodeError as e:
+                    self.config.logger.error(f"Invalid JSON syntax: {e}")
+                    data = extract_json_from_llm_response(response)
+
+                
                 self.config.logger.success("Successfull completed the Extraction pipeline with Azure OCR.........")
-                return final_text, response
+                return final_text, data, response
 
 
 
