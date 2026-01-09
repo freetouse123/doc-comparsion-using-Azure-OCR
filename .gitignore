@@ -210,3 +210,6 @@ __marimo__/
 testing.py
 */testing.py
 */testing_*.py
+logs
+*/.logs
+artifact

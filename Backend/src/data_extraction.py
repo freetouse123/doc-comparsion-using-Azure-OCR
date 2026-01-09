@@ -8,10 +8,9 @@ from dotenv import load_dotenv
 from config.config import DefaultConfig
 from utils.helper import time_decorator
 import os
+from datetime import datetime
 
 load_dotenv()
-
-
 
 class DataExtraction:
     def __init__(self):
@@ -29,6 +28,7 @@ class DataExtraction:
 
     @time_decorator
     def extract_data_using_ocr(self, file_bytes:bytes):
+        self.config.logger.info("Extracting the Data using the OCR")
         try:
             poller = self.ocr_client.begin_analyze_document(
                 "prebuilt-layout", 
@@ -52,20 +52,21 @@ class DataExtraction:
 
             return page_wise_md, page_wise_ocr
         except Exception as e:
-            print(f"error in Extracting data using OCR: {e}")
+            self.config.logger.error(f"error in Extracting data using OCR: {e}")
             raise
     
     @time_decorator
-    def extract_data_without_using_ocr(file_bytes:bytes):
+    def extract_data_without_using_ocr(self, file_bytes:bytes):
         try:
             pass
         except Exception as e:
-            print(f"Error in Extracting data using the Fitz: {e}")
+            self.config.logger.error(f"Error in Extracting data using the Fitz: {e}")
             raise
     
     @time_decorator
     def data_pre_processing(self, extracted_data:str):
         try:
+            self.config.logger.info("Pre Processing the Extracted text using the m")
             response = self.openai_client.chat.completions.create(
                 messages=[
                     {
@@ -85,26 +86,27 @@ class DataExtraction:
                 model=os.getenv("AZURE_OPENAI_DEPLOYMENT")
             )
 
-            print(response.choices[0].message.content)
-
+            self.config.logger.success(f"Complete data processing using the OpenAI")
             return response.choices[0].message.content
         except Exception as e:
-            print(f"Error in Data pre processing from Openai side: {e}")
+            self.config.logger.error(f"Error in Data pre processing from Openai side: {e}")
             raise
 
     @time_decorator
     def main(self, file_bytes:bytes):
         try:
+            self.config.logger.info(f"Data Extraction Pipeline initialized successfully......")
             page_wise_md, page_wise_ocr = self.extract_data_using_ocr(
                 file_bytes= file_bytes
             )
 
             response= self.data_pre_processing(
-                extracted_data='\n\n'.join(page_wise_ocr[:3])
+                extracted_data='\n\n'.join(page_wise_md[:3])
             )
+            self.config.logger.success(f"Successfull completed the Extraction pipeline.........")
             return page_wise_md, page_wise_ocr, response
 
         except Exception as e:
-            print(f"Error in Data extaction pipeline: {e}")
+            self.config.logger.error(f"Error in Data extaction pipeline: {e}")
             raise
 
