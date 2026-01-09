@@ -15,3 +15,4 @@ PyMuPDF
 pillow
 tenacity==9.1.2
 ipykernel
+toml

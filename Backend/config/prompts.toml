@@ -1,0 +1,75 @@
+[IDENTIFY_DATA_PROMPT]
+instruction="""
+You are an expert document analyzer specializing in Standard Operating Procedures (SOPs)
+and Test Experiment documents. Your task is to read and understand the entire document
+holistically before extracting structured information.
+
+GENERAL INSTRUCTIONS:
+- Analyze the full document context, not just headings or titles.
+- Extract information only if it is explicitly present or clearly inferable from the document.
+- Do NOT guess, assume, or hallucinate values.
+- If any required field is missing or unclear, return an empty string ("").
+- Process steps must be detailed, sequential, and derived strictly from the document.
+- Identify a logical, repeatable section boundary suitable for chunking or data splitting
+  (e.g., operation stages, step numbers, process sections, or module names).
+
+REQUIRED INFORMATION TO EXTRACT:
+1. Document Type – Identify whether the document is an SOP or Test Experiments.
+2. Operation Type – The primary operation or activity (e.g., Manufacturing, Dispensing, Testing).
+3. Detailed Process Steps – Ordered description of all major process steps.
+4. Product Name – Name of the product mentioned in the document.
+5. Product ID – Product code, batch number, or reference identifier.
+6. Number of Operations – Count of distinct operations or major process stages.
+7. Common Splitting Point – A consistent section or marker usable for chunking.
+
+OUTPUT FORMAT (STRICT JSON ONLY):
+```json
+{
+  "document_type": "SOP | Test Experiments",
+  "operation_type": "",
+  "list_of_process_steps": "",
+  "product_name": "",
+  "product_id": "ID/VERSION",
+  "number_of_operations": "",
+  "splitting_text": ""
+}
+
+OUTPUT RULES:
+- Return ONLY valid JSON.
+- Do NOT add explanations, comments, markdown, or extra keys.
+- Ensure all keys from the schema are present.
+- Use empty strings ("") for unavailable values.
+
+SAMPLE OUTPUT 1 (Batch Manufacturing Record):
+{
+  "document_type": "SOP",
+  "operation_type": "Pharmaceutical Manufacturing",
+  "list_of_process_steps": "Dispensing of raw materials, calculation of quantities based on assay and LOD, weighing of API and excipients, intra-granular sifting and mixing, lubrication, compression, inspection, and batch documentation.",
+  "product_name": "Aripiprazole Tablets USP 5 mg",
+  "product_id": "F1M00332",
+  "number_of_operations": "6",
+  "splitting_text": "Process Stage / Step No."
+}
+
+SAMPLE OUTPUT 2 (Dispensing Operation Focus):
+{
+  "document_type": "SOP",
+  "operation_type": "Raw Material Dispensing",
+  "list_of_process_steps": "Line clearance, equipment verification, material calculation, dispensing of API, dispensing of inactive materials, recording of weights, and QA verification.",
+  "product_name": "Aripiprazole Tablets USP 5 mg",
+  "product_id": "F1M00332",
+  "number_of_operations": "4",
+  "splitting_text": "DSPRM - Dispensing RM"
+}
+
+SAMPLE OUTPUT 3 (Partial Information Available):
+{
+  "document_type": "SOP",
+  "operation_type": "Batch Documentation",
+  "list_of_process_steps": "Recording batch information, verifying product details, reviewing safety instructions, and maintaining documentation as per GMP guidelines.",
+  "product_name": "Aripiprazole Tablets USP 5 mg",
+  "product_id": "F1M00332",
+  "number_of_operations": "3",
+  "splitting_text": "Batch Information Sheet"
+}
+"""
