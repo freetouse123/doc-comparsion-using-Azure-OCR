@@ -7,9 +7,10 @@ from openai import AzureOpenAI
 from dotenv import load_dotenv
 from config.config import DefaultConfig
 from utils.helper import time_decorator
-import os
 from datetime import datetime
 
+import os
+import fitz
 load_dotenv()
 
 class DataExtraction:
@@ -58,10 +59,28 @@ class DataExtraction:
     @time_decorator
     def extract_data_without_using_ocr(self, file_bytes:bytes):
         try:
-            pass
+            self.config.logger.info(f"Extracting the data without using the OCR model using the fitz")
+            pdf_document = fitz.open(stream=file_bytes, filetype="pdf")
+
+            page_wise_ocr = []
+            for page_number in range(pdf_document.page_count):
+                page = pdf_document.load_page(page_number)  # load page
+                text = page.get_text("text")  # extract text
+                page_wise_ocr.append(text)
+            
+            pdf_document.close()  # close the document
+
+            # Optional: merge all pages into a single text
+            final_text = "\n\n".join(page_wise_ocr)
+
+            self.config.logger.info(f"Extracted text length: {len(final_text)} characters")
+            self.config.logger.info(f"Extraction of the data without using the OCR completed...")
+            return page_wise_ocr, final_text
+
         except Exception as e:
             self.config.logger.error(f"Error in Extracting data using the Fitz: {e}")
             raise
+    
     
     @time_decorator
     def data_pre_processing(self, extracted_data:str):
@@ -92,19 +111,38 @@ class DataExtraction:
             self.config.logger.error(f"Error in Data pre processing from Openai side: {e}")
             raise
 
+    
     @time_decorator
-    def main(self, file_bytes:bytes):
+    def main(self, file_bytes:bytes, OCR:bool=False):
         try:
-            self.config.logger.info(f"Data Extraction Pipeline initialized successfully......")
-            page_wise_md, page_wise_ocr = self.extract_data_using_ocr(
-                file_bytes= file_bytes
-            )
+            if OCR:
+                self.config.logger.info(f"Data Extraction Pipeline with Azure OCR initialized successfully......")
+                page_wise_md, page_wise_ocr = self.extract_data_using_ocr(
+                    file_bytes= file_bytes
+                )
 
-            response= self.data_pre_processing(
-                extracted_data='\n\n'.join(page_wise_md[:3])
-            )
-            self.config.logger.success(f"Successfull completed the Extraction pipeline.........")
-            return page_wise_md, page_wise_ocr, response
+                response= self.data_pre_processing(
+                    extracted_data='\n\n'.join(page_wise_md[:3])
+                )
+
+                final_text = "\n\n".join(page_wise_ocr)
+                self.config.logger.success(f"Successfull completed the Extraction pipeline with Azure OCR.........")
+                return final_text, response
+
+            else:
+                self.config.logger.info("Data Extraction Pipeline started witout Azure OCR.......... ")
+                page_wise_ocr, final_text = self.extract_data_without_using_ocr(
+                    file_bytes= file_bytes
+                )
+
+                response= self.data_pre_processing(
+                    extracted_data='\n\n'.join(page_wise_ocr[:3])
+                )
+                self.config.logger.success("Successfull completed the Extraction pipeline with Azure OCR.........")
+                return final_text, response
+
+
+
 
         except Exception as e:
             self.config.logger.error(f"Error in Data extaction pipeline: {e}")
