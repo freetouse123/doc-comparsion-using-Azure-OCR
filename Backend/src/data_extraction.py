@@ -1,9 +1,12 @@
 from azure.core.credentials import AzureKeyCredential
 from azure.ai.documentintelligence import DocumentIntelligenceClient
-from azure.ai.documentintelligence.models import AnalyzeDocumentRequest, DocumentContentFormat, DocumentAnalysisFeature
+from azure.ai.documentintelligence.models import AnalyzeDocumentRequest
+from azure.ai.documentintelligence.models import DocumentContentFormat 
+from azure.ai.documentintelligence.models import DocumentAnalysisFeature
 from openai import AzureOpenAI
 from dotenv import load_dotenv
 from config.config import DefaultConfig
+from utils.helper import time_decorator
 import os
 
 load_dotenv()
@@ -23,6 +26,8 @@ class DataExtraction:
         )
         self.config = DefaultConfig()
 
+
+    @time_decorator
     def extract_data_using_ocr(self, file_bytes:bytes):
         try:
             poller = self.ocr_client.begin_analyze_document(
@@ -50,6 +55,7 @@ class DataExtraction:
             print(f"error in Extracting data using OCR: {e}")
             raise
     
+    @time_decorator
     def extract_data_without_using_ocr(file_bytes:bytes):
         try:
             pass
@@ -57,9 +63,10 @@ class DataExtraction:
             print(f"Error in Extracting data using the Fitz: {e}")
             raise
     
+    @time_decorator
     def data_pre_processing(self, extracted_data:str):
         try:
-            response = self.openai_client.completions.create(
+            response = self.openai_client.chat.completions.create(
                 messages=[
                     {
                         "role": "system",
@@ -85,6 +92,7 @@ class DataExtraction:
             print(f"Error in Data pre processing from Openai side: {e}")
             raise
 
+    @time_decorator
     def main(self, file_bytes:bytes):
         try:
             page_wise_md, page_wise_ocr = self.extract_data_using_ocr(
