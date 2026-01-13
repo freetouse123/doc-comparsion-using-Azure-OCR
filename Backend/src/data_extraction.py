@@ -134,7 +134,7 @@ class DataExtraction:
                     extracted_data='\n\n'.join(page_wise_md[:3])
                 )
 
-                final_text = "\n\n".join(page_wise_ocr)
+                # final_text = "\n\n".join(page_wise_ocr)
 
                 ## Handling the json response
                 import json
@@ -146,7 +146,7 @@ class DataExtraction:
 
                 # print(data)
                 self.config.logger.success(f"Successfull completed the Extraction pipeline with Azure OCR.........")
-                return final_text, data, page_wise_md
+                return page_wise_ocr, data, page_wise_md
             
 
             else:
@@ -170,10 +170,7 @@ class DataExtraction:
                 
                 self.config.logger.success("Successfull completed the Extraction pipeline with Azure OCR.........")
                 return final_text, data, response
-
-
-
-
+            
         except Exception as e:
             self.config.logger.error(f"Error in Data extaction pipeline: {e}")
             raise
