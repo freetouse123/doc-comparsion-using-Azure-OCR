@@ -51,7 +51,7 @@ class DataExtraction:
                 if not(page.lines):
                     import pdb;pdb.set_trace()
                 for line_idx, line in enumerate(page.lines):
-                    page_wise_context += line.content
+                    page_wise_context += line.content + " "
 
                 page_wise_ocr.append(page_wise_context)
 

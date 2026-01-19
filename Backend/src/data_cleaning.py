@@ -159,7 +159,7 @@ class DataCleaning:
             logger.info(f"Error in text cleaning for BMR: {e}")
             raise
     
-    def extract_and_clean_bmr(text:str):
+    def extract_and_clean_bmr(text:str)->str:
         """
         Complete extraction and cleaning pipeline for BMR documents.
         

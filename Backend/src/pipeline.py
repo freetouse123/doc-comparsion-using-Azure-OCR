@@ -88,12 +88,15 @@ class Pipeline:
                 OCR= True
             )
 
+            logger.info(data_bmr)
+
             cleaned_text_bmr = [
-                self.data_cleaning.extract_and_clean_bmr(text=text )
+                self.data_cleaning.extract_and_clean_bmr(text )
                 for text in bmr_page_wise_data
             ]
         
             cleaned_text_bmr_text = "\n\n".join(cleaned_text_bmr)
+           
 
         except Exception as e:
             logger.error(f"error in BMR document processing pipeline: {e}")
